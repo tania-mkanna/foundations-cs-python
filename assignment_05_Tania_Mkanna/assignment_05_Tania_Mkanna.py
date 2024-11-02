@@ -19,68 +19,35 @@ class CourseEnrollmentSystem:
     ###################    ENROLLED STUDENT IN COURSE   ##################################     
     def studentEnrollment(self,student,course):
         
-        is_student_found=False
-        course_enrolled_before=False
-
-        for enrolled_student in self.list_of_students:
-            if (student.id in enrolled_student.id): 
-    
-                is_student_found=True
-                break
-
-        if is_student_found==False:
-            print("student not found")
-            return
-
+        
         if course.code in self.course_catalog:
-            for course_code in student.enrolled_courses[student.id]:
-                if (course_code == course.code) :
-                    course_enrolled_before=True
-                    print(course.code,"is already enrolled") 
-                    return
+            student.enroll(course)
+           
         else:
             print("the course is not available") 
             return
 
-        if course_enrolled_before==False:    
-                student.enrolled_courses[student.id].append(course.code)
-        
-        
-                    
-        
     #################################################################################
 
     ###################    drop course for student   ################################## 
     def dropCourse(self,student,course):
-        is_student_found=False
-        course_found=False
-        for enrolled_student in self.list_of_students:
-
-            if (enrolled_student.id == student.id):
-                is_student_found=True
-                break
+        
                 
-            
-        if is_student_found==False:
-            print("the student is not found")
-            return       
+        if course.code in student.enrolled_courses:
                 
-    
-        if is_student_found==True:           
-            for course_code in student.enrolled_courses[student.id]:
-                if(course_code==course.code):
-                    course_found=True
-                    student.enrolled_courses[student.id].remove(course.code)
-                    break
+            student.drop(course)
+        else:    
+            print("the course is not enrolled") 
+            return
+   
                     
-            if course_found==False:
-                print(course.code,"is not found")         
+               
     ############################################################################## 
 
     ###################   List Student Courses   #################################
     def displayCourses(self,student):
-        print("enrolled the courses  : ")
-        for course_id in student.enrolled_courses[student.id]:
+        print("The enrolled courses  : ")
+        for course_id in student.enrolled_courses:
             print(f"{course_id}:{self.course_catalog[course_id]}")
     ###############################################################################
 
@@ -118,7 +85,27 @@ class Student:
     def __init__(self,id,name):
         self.id = id
         self.name=name
-        self.enrolled_courses={self.id :[]}
+        self.enrolled_courses={}
+
+    def enroll(self, course):
+        #check if course already enrolled
+        if course.code in self.enrolled_courses:
+            print("the student already enroll this course")
+            return
+        else:
+            self.enrolled_courses[course.code]=course    
+
+
+
+    def drop(self, course):
+        if course.code in self.enrolled_courses:
+            
+            del self.enrolled_courses[course.code]
+        else:
+            print("the course is not found")
+            return
+             
+        
 
     # def __str__(self) :
            
@@ -127,17 +114,19 @@ class Student:
 
 def main():
     
+    is_student=False
     course_type_dict={1:"core course",2:"elective course"}
     s1=Student("01","tania")
     s2=Student("02","tania")
     s3=Student("03","nagham")
 
     list_of_students=[s1,s2,s3]
-    course_catalog={""}
+    course_catalog={}
     course_enrollment_system=CourseEnrollmentSystem(list_of_students,course_catalog)
     while True:
         choice=int(input("1. Add Course\n2.Enroll Student in Course\n3. Drop Course for Student\n4. List Student Courses\n5. Save Course Catalog\n6. Load Course Catalog\n7. Exit: Exit the program\nenter a choice:"))
         if choice==1:
+
             course_code=input("enter the code of the course: ")
             course_name=input("enter the name of the course: ")
             number_of_credits=int(input("enter the number of credits: "))
@@ -146,20 +135,25 @@ def main():
             course=Course(course_code,course_name,number_of_credits,course_type_dict[course_type])
 
             course_enrollment_system.addCourse(course)
+            
             print("------------------------------")
         
         elif choice==2:
             
-            course_code=input("enter the code of the course:")
-
             student_id=input("enter the id of the student:")
             
 
             for i in list_of_students:
                 if i.id ==student_id:
+                    is_student=True
                     student=i
                     break
-        
+
+            if is_student==False:
+                print("the student is not found")
+                continue
+
+            course_code=input("enter the code of the course:")
 
             course_name=course_enrollment_system.course_catalog[course_code]["name"]
             number_of_credits=course_enrollment_system.course_catalog[course_code]["number of credits"]
@@ -172,9 +166,9 @@ def main():
            
         elif choice==3:
 
-            course_code=input("enter the code of the course")
+            course_code=input("enter the code of the course: ")
 
-            student_id=input("enter the id of the student")
+            student_id=input("enter the id of the student: ")
 
             for i in list_of_students:
                 if i.id ==student_id:
@@ -183,7 +177,7 @@ def main():
         
 
             course_name=course_enrollment_system.course_catalog[course_code]["name"]
-            number_of_credits=course_enrollment_system.course_catalog[course_code]["nnumber of credits"]
+            number_of_credits=course_enrollment_system.course_catalog[course_code]["number of credits"]
             course_type=course_enrollment_system.course_catalog[course_code]["type of course"]
             course=Course(course_code,course_name,number_of_credits,course_type)
 
@@ -194,7 +188,7 @@ def main():
         elif choice==4:
 
             student_is_found=False
-            student_id=input("enter the id of the student")
+            student_id=input("enter the id of the student: ")
 
             for i in list_of_students:
                 if i.id ==student_id:
@@ -210,12 +204,12 @@ def main():
             print("------------------------------")  
 
         elif choice==5:
-            file_name=input("enter the name of file to save the course catalog")
+            file_name=input("enter the name of file to save the course catalog: ")
             course_enrollment_system.saveCourseCatalog(file_name)
             print("------------------------------")
 
         elif choice==6:
-            file_name=input("enter the name of file to load the course from it")
+            file_name=input("enter the name of file: ")
             course_enrollment_system.loadCourseCatalog(file_name)
             print("------------------------------")
 
